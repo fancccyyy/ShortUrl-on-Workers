@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短网址生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        input[type="text"], input[type="datetime-local"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="datetime-local"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* 美化开关按钮 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin: 0 auto 1rem;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        .result a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+
+        .error, .success {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            input[type="text"], input[type="datetime-local"], button {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>短网址生成器</h1>
+        <label for="longUrl">长网址：</label>
+        <input type="text" id="longUrl" placeholder="请输入长网址" required>
+
+        <label for="customSwitch">自定义短链接：</label>
+        <label class="switch">
+            <input type="checkbox" id="customSwitch">
+            <span class="slider"></span>
+        </label>
+        <input type="text" id="customCode" placeholder="请输入5字符的自定义短链接" style="display: none;" maxlength="5">
+
+        <label for="expireIn">短链接过期时间：</label>
+        <input type="datetime-local" id="expireIn" required>
+
+        <button onclick="generateShortUrl()">生成短网址</button>
+        <div class="result" id="result"></div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const customSwitch = document.getElementById('customSwitch');
+        const customCodeInput = document.getElementById('customCode');
+
+        // 切换自定义短链接输入框的显示状态
+        customSwitch.addEventListener('change', () => {
+            if (customSwitch.checked) {
+                customCodeInput.style.display = 'block';
+            } else {
+                customCodeInput.style.display = 'none';
+                customCodeInput.value = '';
+            }
+        });
+
+        async function generateShortUrl() {
+            const longUrl = document.getElementById('longUrl').value.trim();
+            const customCode = customSwitch.checked ? document.getElementById('customCode').value.trim() : '';
+            const expireInInput = document.getElementById('expireIn').value;
+            const resultDiv = document.getElementById('result');
+            const messageDiv = document.getElementById('message');
+
+            // 清空提示信息
+            messageDiv.innerHTML = '';
+
+            // 校验长网址是否合法
+            const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            if (!urlPattern.test(longUrl)) {
+                messageDiv.innerHTML = '<div class="error">请输入有效的长网址</div>';
+                return;
+            }
+
+            // 校验自定义短链接（如果启用）
+            if (customSwitch.checked && customCode.length !== 5) {
+                messageDiv.innerHTML = '<div class="error">自定义短链接必须为5个字符</div>';
+                return;
+            }
+
+            // 校验过期时间
+            const now = new Date();
+            const expireIn = new Date(expireInInput);
+            const oneMonthLater = new Date();
+            oneMonthLater.setMonth(now.getMonth() + 1);
+
+            if (expireIn <= now || expireIn > oneMonthLater) {
+                messageDiv.innerHTML = '<div class="error">过期时间必须在当前时间后且不超过1个月</div>';
+                return;
+            }
+
+            // 准备请求体
+            const requestBody = {
+                longUrl,
+                customCode: customCode || null,
+                createIn: new Date().toISOString(),
+                expireIn: expireIn.toISOString()
+            };
+
+            // 显示加载状态
+            resultDiv.innerHTML = '正在生成短网址...';
+
+            try {
+                // 发送 POST 请求到后端
+                const response = await fetch('/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.status === 200) {
+                    resultDiv.innerHTML = `
+                        <div class="success">生成成功！</div>
+                        <p><strong>短链接：</strong><a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></p>
+                        <p><strong>长链接：</strong>${data.longUrl}</p>
+                        <p><strong>创建时间：</strong>${new Date(data.createIn).toLocaleString()}</p>
+                        <p><strong>过期时间：</strong>${new Date(data.expireIn).toLocaleString()}</p>
+                    `;
+                } else if (response.status === 400 && data.error === "Custom code is invalid") {
+                    messageDiv.innerHTML = '<div class="error">自定义短链接不合法，请重新输入</div>';
+                } else if (response.status === 409 && data.error === "Custom code already exists") {
+                    messageDiv.innerHTML = '<div class="error">自定义短链接已被占用，请更换</div>';
+                } else if (response.status === 500) {
+                    messageDiv.innerHTML = '<div class="error">服务器错误，请稍后再试</div>';
+                }
+            } catch (error) {
+                messageDiv.innerHTML = '<div class="error">请求失败，请检查网络连接</div>';
+            }
+        }
+    </script>
+</body>
+</html>

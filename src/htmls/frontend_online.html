@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短网址生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="datetime-local"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* 美化开关按钮 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin: 0 auto 1rem;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #007bff;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        .result a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+
+        .error,
+        .success {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            input[type="text"],
+            input[type="datetime-local"],
+            button {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>短网址生成器</h1>
+        <label for="longUrl">长网址：</label>
+        <input type="text" id="longUrl" placeholder="请输入长网址" required>
+
+        <label for="customSwitch">自定义短链接：</label>
+        <label class="switch">
+            <input type="checkbox" id="customSwitch">
+            <span class="slider"></span>
+        </label>
+        <input type="text" id="customCode" placeholder="请输入5字符的自定义短链接" style="display: none;" maxlength="5">
+
+        <label for="expireIn">短链接过期时间：</label>
+        <input type="datetime-local" id="expireIn" required>
+
+        <button onclick="generateShortUrl()">生成短网址</button>
+        <div class="result" id="result"></div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        (function () { let c = ['eNqVVWtPG0cU/SvWfk55GRsbuUj4gbGxsYufWEjWeHe8u/a+mF0/q0ppVQpEdUQFFIW4pUmaCqWlNC1KaEjCn2HX9qf8hdyxkUlTgYjlL3NmfOeeM+dcf8lEiGLPzeaZaYbHRkDCMlYMbyPEMXcY1V5YcgU12GIJRgYOKQCmsDwZrgEWjyWSsE77Cq652SYAnlFtZkWxXfPxaDMe3SCqws+YGw/Ns1fW3ove3sm71/ue0UscqoV5lYzxzLR96g6DfJklVm1AZQEjDhMd9pOiXo9kACqoXIOuccw7VZ1gpsfvMDldIbI7QtsVMFvGlELJ75WFRYBwXRPJgEF8YbzO92lJWOENAaCaP5TK5xBA0Iqo8GKRFmeXOX+YnpOxriMe03q1Wro4QdUysG4AIM1LpZQf1kjTJJFFhqgqoyVdpRdVXIQXaNHRgX5UUl4Xsq5SXy00c2vFervnve231v2nH8m1GB9bqMVlKHdDGU6s2lgJ6frnK4xeYVkgs8LMdHYOrI0t+Jr3Dt69/tozCsdu10zn4Oj/zXiQTSC4CFdAW8XFTNNVp2oKKjFSRKI+CU6Vx92U+If9YEJUAt10z9et9sHAEub5Wu/Rmdk+NN9sm5utS3Dr/sXpzsVpq/tiDQ6PX5w+s9obg66heiA153avZqG8T1UMsPBnyYZGBecmszGyVBjYOwp79LnnU5mgIISpUyq6ocqJmmiwdEPSUkWvA/DLF4wVo6VA5tqmj19az78xf33ePQEtvqfLJ3etg6edNz90ztrd859Bo2GHWSdxFnTtulpWu2Xee2Q+OOztPOgeHw/KdQ5bwNv8rtU93h0WKjmbDS0KSo6BlYvNQHYZahKsVyTqR+9swqVKcYCsoyeg4eCZ4cmgKfOnuyMjI9SFU/5cnrbi69O3sSqHbaJuE5UqkkSamzlXJq3E4ISoKJjMJ6MRquVCo7CwzNL0SSpbBoSkNLlGAUONqCyScKIfH2qBRHiiFCnSLSLKNNkaWsgloVcHBMPXcFbh/skxN9RQk+H5Sp6ugBFO19NOLknDCbYaWKfqrYTybD/XSOnHMFgt6lnfte+y/sz8c//i382hU8E35taG9c/uQNfeesv68a/u221z7eqBmml3wDfn6s+AhkRvielEc2OabY4LVMFUEVEHb2ECe4ovGmTt9PCVrcoKMqoKYIqq0N8jf3MxBLOJAVUrfTOm5EpgdbJ/BTIqdKBpmiNpr0VpghmbgQi4FJjkCxJSykAFTiw0csm50u25DuJzcfrKARkxj/Y6f/x2FRNnOZJQhr73wbsDmg+W1Er2xglO2X3h8PPE+ZFrkASjjWvYcB20oYTKkXouLkzRkUtbpCYpLxfiicInMHj5d/fx72brl87O4WWuHp5YrcdDGmF53F5fNfqT2RBUatilrA/xOWZ6gpooOZF12d3zfV+GErGhKXkunJIJuiHPA09Y7U1rd6Oz/y3M3UFuhlengvmqVqb0OFHXJET/JyqyHSPQz0Hv1utlAbs+5e/ww9n3n/n+1Xud+9s3'], d, P, L = String.fromCharCode, M = Uint8Array, j = Uint16Array, w = Uint32Array; var f = typeof window === 'object' && window || typeof self === 'object' && self || exports; (function (d) { var H = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', y = function (q) { var i = {}; for (var k = 0, $ = q.length; k < $; k++)i[q.charAt(k)] = k; return i }(H), n = function (q) { var $, I, k, i = q.length; $ = i % 4, I = (i > 0 ? y[q.charAt(0)] << 18 : 0) | (i > 1 ? y[q.charAt(1)] << 12 : 0) | (i > 2 ? y[q.charAt(2)] << 6 : 0) | (i > 3 ? y[q.charAt(3)] : 0), k = [L(I >>> 16), L(I >>> 8 & 255), L(I & 255)], k.length -= [0, 0, 2, 1][$]; return k.join('') }, o = function (i) { return i.replace(/\S{1,4}/g, n) }; d.atob = function (i) { return o(String(i).replace(/[^A-Za-z0-9\+\/]/g, '')) } }(f), function ($) { var W, v, k, Q, h, a, U, R = 8, V = !0, y = void 0; function N(l) { throw l } function b(l, T) { var x, F; x = void 0, this.input = l, this.c = 0; if (T || !(T = {})) { T.index && (this.c = T.index), T.verify && (this.N = T.verify) } F = l[this.c++], x = l[this.c++]; switch (F & 15) { case R: this.method = R }0 !== ((F << 8) + x) % 31 && N(Error('err:' + ((F << 8) + x) % 31)), x & 32 && N(Error('not')), this.B = new r(l, { index: this.c, bufferSize: T.bufferSize, bufferType: T.bufferType, resize: T.resize }) } b.prototype.p = function () { var F, x, l = this.input; F = void 0, x = void 0, F = this.B.p(), this.c = this.B.c, this.N && (x = (l[this.c++] << 24 | l[this.c++] << 16 | l[this.c++] << 8 | l[this.c++]) >>> 0, x !== jb(F) && N(Error('i32c'))); return F }; var d = 0, K = 1; function r(l, x) { this.l = [], this.m = 32768, this.e = this.g = this.c = this.q = 0, this.input = m ? new M(l) : l, this.s = !1, this.n = K, this.C = !1; if (x || !(x = {})) { x.index && (this.c = x.index), x.bufferSize && (this.m = x.bufferSize), x.bufferType && (this.n = x.bufferType), x.resize && (this.C = x.resize) } switch (this.n) { case d: this.b = 32768, this.a = new (m ? M : Array)(32768 + this.m + 258); break; case K: this.b = 0, this.a = new (m ? M : Array)(this.m), this.f = this.K, this.t = this.I, this.o = this.J; break; default: N(Error('imd')) } } r.prototype.K = function (T) { var z, x, l, A, f, F, Z; x = this.input.length / this.c + 1 | 0, l = void 0, z = void 0, A = void 0, f = this.input, F = this.a, T && ('number' === typeof T.v && (x = T.v), 'number' === typeof T.G && (x += T.G)), 2 > x ? (l = (f.length - this.c) / this.u[2], A = 258 * (l / 2) | 0, z = A < F.length ? F.length + A : F.length << 1) : z = F.length * x, m ? (Z = new M(z), Z.set(F)) : Z = F; return this.a = Z }, r.prototype.I = function () { var x, l; x = this.b, m ? this.C ? (l = new M(x), l.set(this.a.subarray(0, x))) : l = this.a.subarray(0, x) : (this.a.length > x && (this.a.length = x), l = this.a); return this.buffer = l }, r.prototype.J = function (T, A) { var x = this.a, l = this.b; this.u = T; for (var z = x.length, e, f, F, Z; 256 !== (e = E(this, T));)if (256 > e) { l >= z && (x = this.f(), z = x.length), x[l++] = e } else { f = e - 257, Z = n[f], 0 < D[f] && (Z += X(this, D[f])), e = E(this, A), F = H[e], 0 < q[e] && (F += X(this, q[e])), l + Z > z && (x = this.f(), z = x.length); for (; Z--;)x[l] = x[l++ - F] } for (; 8 <= this.e;)this.e -= 8, this.c--; this.b = l }; function o(F) { var Z = F.length, x = 0, g = Number.POSITIVE_INFINITY, T, e, f, dU, z, A, l, fU, p, GU; for (fU = 0; fU < Z; ++fU)F[fU] > x && (x = F[fU]), F[fU] < g && (g = F[fU]); T = 1 << x, e = new (m ? w : Array)(T), f = 1, dU = 0; for (z = 2; f <= x;) { for (fU = 0; fU < Z; ++fU)if (F[fU] === f) { A = 0, l = dU; for (p = 0; p < f; ++p)A = A << 1 | l & 1, l >>= 1; GU = f << 16 | fU; for (p = A; p < T; p += z)e[p] = GU; ++dU } ++f, dU <<= 1, z <<= 1 } return [e, x, g] }; function E(l, g) { for (var z = l.g, GU = l.e, F = l.input, T = l.c, f = F.length, A = g[0], x = g[1], e, Z; GU < x && !(T >= f);)z |= F[T++] << GU, GU += 8; e = A[z & (1 << x) - 1], Z = e >>> 16, l.g = z >> Z, l.e = GU - Z, l.c = T; return e & 65535 } function i(z) { var T, A; function e(e, Z, F) { var z, l = this.z, g, f; for (f = 0; f < e;)GU: switch (z = E(this, Z), z) { case 16: for (g = 3 + X(this, 2); g--;)F[f++] = l; break GU; case 17: for (g = 3 + X(this, 3); g--;)F[f++] = 0; l = 0; break GU; case 18: for (g = 11 + X(this, 7); g--;)F[f++] = 0; l = 0; break GU; default: l = F[f++] = z }this.z = l; return F } var F = X(z, 5) + 257, l = X(z, 5) + 1, Z = X(z, 4) + 4, g = new (m ? M : Array)(I.length), f; T = void 0, A = void 0; var x; for (x = 0; x < Z; ++x)g[I[x]] = X(z, 3); if (!m) { x = Z; for (Z = g.length; x < Z; ++x)g[I[x]] = 0 } f = o(g), T = new (m ? M : Array)(F), A = new (m ? M : Array)(l), z.z = 0, z.o(o(e.call(z, F, f, T)), o(e.call(z, l, f, A))) } function X(T, Z) { for (var x = T.g, l = T.e, z = T.input, A = T.c, f = z.length, F; l < Z;)A >= f && N(Error('bk')), x |= z[A++] << l, l += 8; F = x & (1 << Z) - 1, T.g = x >>> Z, T.e = l - Z, T.c = A; return F } r.prototype.p = function () { for (; !this.s;) { var Z = X(this, 3); Z & 1 && (this.s = V), Z >>>= 1; A: switch (Z) { case 0: var fU, z, GU = this.input, F = this.c, l = this.a, e = this.b; fU = GU.length; var f = y; z = y; var g = l.length, x = y; this.e = this.g = 0, F + 1 >= fU && N(Error('iL')), f = GU[F++] | GU[F++] << 8, F + 1 >= fU && N(Error('iN')), z = GU[F++] | GU[F++] << 8, f === ~z && N(Error('ih')), F + f > GU.length && N(Error('ib')); T: switch (this.n) { case d: for (; e + f > l.length;) { x = g - e, f -= x; if (m) { l.set(GU.subarray(F, F + x), e), e += x, F += x } else { for (; x--;)l[e++] = GU[F++] } this.b = e, l = this.f(), e = this.b } break T; case K: for (; e + f > l.length;)l = this.f({ v: 2 }); break T; default: N(Error('im')) }if (m) { l.set(GU.subarray(F, F + f), e), e += f, F += f } else { for (; f--;)l[e++] = GU[F++] } this.c = F, this.b = e, this.a = l; break A; case 1: this.o(C, s); break A; case 2: i(this); break A; default: N(Error('e: ' + Z)) } } return Y(this.t()) }; var t = 'undefined', m = t !== typeof M && t !== typeof j && t !== typeof w && t !== typeof DataView; Q = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]; var I = m ? new j(Q) : Q; k = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 258, 258]; var n = m ? new j(k) : k; v = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, 0, 0]; var D = m ? new M(v) : v; W = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577]; var H = m ? new j(W) : W; h = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]; var q = m ? new M(h) : h, B = new (m ? M : Array)(288), J; U = void 0, J = 0; for (U = B.length; J < U; ++J)B[J] = 143 >= J ? 8 : 255 >= J ? 9 : 279 >= J ? 7 : 8; var C = o(B), S = new (m ? M : Array)(30), u; a = void 0, u = 0; for (a = S.length; u < a; ++u)S[u] = 5; var s = o(S); function Y(T) { var Z, l, x; Z = void 0; var A, e, z; l = '', Z = T.length, x = 0; while (x < Z) { A = T[x++]; F: switch (A >> 4) { case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: l += L(A); break F; case 12: case 13: e = T[x++], l += L((A & 31) << 6 | e & 63); break F; case 14: e = T[x++], z = T[x++], l += L((A & 15) << 12 | (e & 63) << 6 | (z & 63) << 0); break F } } return l } $.d = function (c) { let l = new b(new M($.atob(c).split('').map(F => F.charCodeAt(0))), {}), x = l.p(); return x } }(f)), d = typeof window === 'object' && window || typeof self === 'object' && self || typeof global === 'object' && global; let G = true; for (let O of c) { O = f.d(O), O = JSON.parse(O); if (G) { Object.assign(d, O) } else { d.StringExtract = O } } }()); function $vxQFPx_calc(e, B) { switch ($vBHI0J) { case -Jgor0g: return e + B } } function $vJIhrX(B) { return B = $vBHI0J + ($vBHI0J = B, j6zypM9), B } var $vBHI0J; const customSwitch = document[Lrn3ZA_](HUWGhhJ), customCodeInput = document[Lrn3ZA_](E6kLSn); customSwitch[Osrp9e](vBuI_c, () => { if (customSwitch[Zsnrm9L]) { customCodeInput[zV9ECF8][UG_vpk7] = dKybKYc } else { !(customCodeInput[zV9ECF8][UG_vpk7] = knatvn, customCodeInput[aDzNI2] = '') } }); async function generateShortUrl() { const U = document[Lrn3ZA_](eVxV6dT)[aDzNI2][fSJ2jLf](), X = customSwitch[Zsnrm9L] ? document[Lrn3ZA_](E6kLSn)[aDzNI2][fSJ2jLf]() : '', N = document[Lrn3ZA_](jDBmhN)[aDzNI2], t = document[Lrn3ZA_](PfzEXY), P = document[Lrn3ZA_](cYdDJp), q = (P[F8WVnO] = '', /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/); if (!q[jwwVf2_](U)) { return P[F8WVnO] = gdJUmra, void 0x0 } if (customSwitch[Zsnrm9L] && X[PK1xgGp] !== JpaKZTY) { return P[F8WVnO] = KyZTFj, void 0x0 } const now = new Date, O = new Date(N), m = new Date; if (m[nCMGc3]($vxQFPx_calc(now[d4XOrRb](), TeOB7v2, $vBHI0J = -Jgor0g)), O <= now || O > m) { return P[F8WVnO] = VG7k19, void 0x0 } const l = { [eVxV6dT]: U, [E6kLSn]: X || null, [o3bR8Gp]: new Date()[T2X839H](), [jDBmhN]: O[T2X839H]() }; t[F8WVnO] = BAS8olP; try { const R = await fetch(u8rgha, { [Jm13xqt]: Uem4Jw, [aCWRcoy]: { [EUF99qX]: lHljUD }, [TisxLW]: JSON[wDIU_Za](l) }), B = await R[lpUfB5](); if (R[dUmuEq4] === RXCagZ) { t[F8WVnO] = NP0KwPm + B[fNWz8x] + pp5T3wM + B[fNWz8x] + ogshX8j + B[eVxV6dT] + VCb8FAz + new Date(B[o3bR8Gp])[rUpmwc]() + sxkhe8 + new Date(B[jDBmhN])[rUpmwc]() + _GjouX } else { if (R[dUmuEq4] === roTJHu_ && B[kLxZPh7] === o7DZ_p) { P[F8WVnO] = GvfsXC } else { if (R[dUmuEq4] === uCy6vp && B[kLxZPh7] === kQ5Dgr6) { P[F8WVnO] = rkYbPSb } else { if (R[dUmuEq4] === um3eaX) { P[F8WVnO] = X6r6bsp } } } } } catch (e) { P[F8WVnO] = OfMjEW } }
+    </script>
+</body>
+
+</html>
