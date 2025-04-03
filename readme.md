@@ -18,7 +18,3 @@
 4. Now you may use it.
 
 5. If you wish to 'auto-delete' all expired links in the database, a scheduled task is already provided in the code, so you may just add a [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/). Note is not real auto-delete, just scheduled delete.
-
-
-
-
