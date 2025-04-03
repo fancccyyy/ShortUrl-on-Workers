@@ -38,7 +38,7 @@ export default {
 	},
 
 	async scheduled(controller, env, ctx) {
-		const delete_prepare = env.DB.prepare(`DELETE FROM links WHERE expire_time > datetime('now')`);
+		const delete_prepare = env.DB.prepare(`DELETE FROM links WHERE strftime('%Y-%m-%d %H:%M:%S', expire_time) > datetime('now')`);
 		const deleted = await delete_prepare.run();
 	}
 };
