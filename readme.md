@@ -18,3 +18,5 @@
 4. Now you may use it.
 
 5. If you wish to 'auto-delete' all expired links in the database, a scheduled task is already provided in the code, so you may just add a [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/). Note is not real auto-delete, just scheduled delete.
+
+6. Note about `frontend.html` and `frontend_online.html`. `frontend.html` is the original version, and contains human readable JS codes. `frontend_online.html` is the JS obfuscated version. Default use the latter, you may change it to `import frontend from "../htmls/frontend.html";` in `homepageHandler.js`.
